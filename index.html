@@ -32,21 +32,19 @@
   </head>
 
   <body>
-    <svg height="300" width="800">
-      <rect
-        id="bar1"
-        class="bars"
-        x="0"
-        y="10"
-        height="10"
-        width="50"
-      ></rect>
-    </svg>
+    <svg id="chart"></svg>
+    <label for="sort-select">Sort by</label>
+    <select id="sort-select">
+      <option selected value="type">Type</option>
+      <option value="product">Product</option>
+      <option value="weight">Weight</option>
+    </select>
     <button id="next">Next Dataset!</button>
 
     <!-- Add your site or application content here -->
     <p>Hello world! This is HTML5 Boilerplate.</p>
     <script src="js/vendor/modernizr-3.11.2.min.js"></script>
+    <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
     <script src="js/plugins.js"></script>
     <script src="js/main.js"></script>
 
