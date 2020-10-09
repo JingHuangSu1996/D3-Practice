@@ -1,58 +1,42 @@
 const d3 = require('d3');
-const DEFAULT_DATA = [127, 61, 256, 71, 15, 23];
+const DEFAULT_DATA = [0.01, 0.3, 0.01, 1.5, 2];
 
 var result;
 
 let execute = (myData = DEFAULT_DATA) => {
   let svg = d3.select('svg');
-  // binding data using d3
-  let bars = svg.selectAll('.bars').data(myData);
 
-  // how do we handle new elements?
-  // we start with transparent gray bars of width 0
-  let newBars = bars
+  const myScale = d3
+    .scaleLinear()
+    .domain([0, 1.5]) // domain defines the values that we expect in out dataset
+    .range([0, 500])
+    .clamp(true); // the range defines which output values we want from the scale.
+
+  /**
+   * Clamping
+   *
+   * What happens when you plot a value that's larger than your domain?
+   * When it's feasible. you will get a value based on your mapping function
+   * but it will exceed your screen coordinates, There is a way to avoid overplotting
+   * by using `Clamping`, by manually assigning every value larger than the
+   * extend of your domain to the max value of the domain. This can be very
+   * helpful, but should always be done with care, you need to highlight
+   * that you've broken the scale somehow.
+   */
+  svg
+    .selectAll('rect')
+    .data(myData)
     .enter()
     .append('rect')
     .attr('x', 0)
-    .attr('y', (_, i) => i * 30 + 50)
-    .attr('width', 0)
+    .attr('y', (_, i) => i * 50 + 50)
+    .attr('width', d => {
+      console.log(myScale(d));
+      return myScale(d);
+    })
     .attr('height', 20)
-    .style('opacity', 0)
-    .classed('bars', true);
-
-  // how do we handle things that are removed?
-  // we increase opacity
-  bars
-    .exit()
-    .style('opacity', 1)
-    .transition()
-    .duration(3000)
-    .style('opacity', 0)
-    .remove();
-
-  console.log(newBars, bars);
-
-  // we merge the new bars with existing one
-  bars = newBars.merge(bars);
-
-  console.log('----> after', bars);
-
-  // how do we handle updates?
-  // we transition towards a blue opaque bar with a data driven width
-  bars
-    .transition()
-    .duration(3000)
-    .attr('x', 0)
-    .attr('y', (_, i) => i * 30 + 50)
-    .attr('width', d => d)
-    .attr('height', 20)
-    .style('fill', 'aliceblue')
-    .style('opacity', 1);
+    .style('fill', 'aliceblue');
 };
-
-d3.select('#next').on('click', () =>
-  execute([500, 100, 120])
-);
 
 execute();
 
