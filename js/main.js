@@ -1,3 +1,19 @@
+/**
+ * Groupings: Handling Nested Elements
+ *
+ * In many cases we want to apply data not directly to low-level SVG elements
+ * but instead use a hierachy of elements. For the bar chart, for example
+ * we might want to add a label showing the actual value, there are two
+ * approaches to doing this.
+ *
+ * 1. Laying out the numbers and the bars independently so that they match up.
+ * 2. Using a group element to define the commonalities between the bars and the number.
+ *
+ * The latter is the better approach, as we only have to define the
+ * common aspects of the group once, This might not make much of
+ * difference for labels and bars, but we could also add tick marks
+ * on the bar charts, an overlay for highlights
+ */
 const d3 = require('d3');
 const DEFAULT_DATA = [127, 61, 256, 71, 15, 23];
 
@@ -5,24 +21,34 @@ var result;
 
 let execute = (myData = DEFAULT_DATA) => {
   let svg = d3.select('svg');
-  // binding data using d3
-  let bars = svg.selectAll('.bars').data(myData);
+  let barHeight = 30;
 
-  // how do we handle new elements?
-  // we start with transparent gray bars of width 0
-  let newBars = bars
+  let barGroups = svg.selectAll('.barGroup').data(myData);
+
+  /**
+   * ==================================
+   *             Initialize
+   * ==================================
+   */
+
+  // append new g element for each data point
+  let barGroupsEnter = barGroups
     .enter()
+    .append('g')
+    .classed('barGroup', true);
+
+  // appending and initializing the rects
+  barGroupsEnter
     .append('rect')
-    .attr('x', 0)
-    .attr('y', (_, i) => i * 30 + 50)
     .attr('width', 0)
     .attr('height', 20)
-    .style('opacity', 0)
-    .classed('bars', true);
+    .style('fill', 'gray');
 
-  // how do we handle things that are removed?
-  // we increase opacity
-  bars
+  // appending empty text elements
+  barGroupsEnter.append('text');
+
+  // taking care of removeing element
+  barGroups
     .exit()
     .style('opacity', 1)
     .transition()
@@ -30,24 +56,33 @@ let execute = (myData = DEFAULT_DATA) => {
     .style('opacity', 0)
     .remove();
 
-  console.log(newBars, bars);
+  // merge selections
+  barGroups = barGroups.merge(barGroupsEnter);
 
-  // we merge the new bars with existing one
-  bars = newBars.merge(bars);
+  // ==== takeing care of update ====
+  barGroups.attr(
+    'transform',
+    (_, i) => `translate(0, ${i * barHeight})`
+  );
 
-  console.log('----> after', bars);
-
-  // how do we handle updates?
-  // we transition towards a blue opaque bar with a data driven width
-  bars
+  barGroups
+    .select('rect')
     .transition()
     .duration(3000)
-    .attr('x', 0)
-    .attr('y', (_, i) => i * 30 + 50)
     .attr('width', d => d)
-    .attr('height', 20)
     .style('fill', 'aliceblue')
-    .style('opacity', 1);
+    .attr('opacity', 1);
+
+  barGroups
+    .select('text')
+    .attr('transform', d => `translate(${d + 5}, 0)`)
+    .text(d => d)
+    .attr('dy', barHeight / 2)
+    .attr('opacity', 0)
+    .transition()
+    .delay(2000)
+    .duration(1000)
+    .attr('opacity', 1);
 };
 
 d3.select('#next').on('click', () =>
